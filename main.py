@@ -1,22 +1,15 @@
 from crew import Engineer, Medic
+from station import Station
 
+
+station = Station("Aurora")
 
 engineer = Engineer("Ilya", 100, 100)
 medic = Medic("Anna", 100, 100)
 
-print(engineer)
-print(medic)
+station.add_crew(engineer)
+station.add_crew(medic)
 
 engineer.work()
-medic.work()
 
-print("\nAfter work:")
-print(engineer)
-print(medic)
-
-engineer.rest()
-medic.rest()
-
-print("\nAfter rest:")
-print(engineer)
-print(medic)
+station.show_crew()

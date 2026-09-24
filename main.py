@@ -1,15 +1,24 @@
-from crew import Engineer, Medic
 from station import Station
+from modules import Reactor, LifeSupport, Laboratory
 
 
 station = Station("Aurora")
 
-engineer = Engineer("Ilya", 100, 100)
-medic = Medic("Anna", 100, 100)
+reactor = Reactor("Main Reactor")
+life_support = LifeSupport("Life Support")
+laboratory = Laboratory("Research Lab")
 
-station.add_crew(engineer)
-station.add_crew(medic)
+station.add_module(reactor)
+station.add_module(life_support)
+station.add_module(laboratory)
 
-engineer.work()
+# Повреждаем реактор — теперь он производит только 25 энергии
+reactor.damage(80)
 
-station.show_crew()
+for _ in range(5):
+    print(f"\n=== DAY {station.day} ===")
+    print(f"Energy: {station.energy}")
+    print(f"Oxygen: {station.oxygen}")
+    print(f"Research: {station.research}")
+
+    station.next_day()

@@ -1,3 +1,7 @@
+import random
+
+from events import MeteorEvent, OxygenLeakEvent, ModuleFailureEvent
+
 class Station:
     def __init__(self, name):
         self.name = name
@@ -6,6 +10,7 @@ class Station:
         self.hull = 100
         self.crew = []
         self.modules = []
+        self.event_log = []
         self.day = 1
         self.research = 0
 
@@ -28,10 +33,24 @@ class Station:
             result = module.operate()
             print(f'{module.name} produced: {result}')
 
+    def trigger_random_event(self):
+        events = [
+            MeteorEvent(),
+            OxygenLeakEvent(),
+            ModuleFailureEvent()
+        ]
+
+        event = random.choice(events)
+        message = event.apply(self)
+        
+        self.event_log.append(f"Day {self.day}: {message}")
+        return message
+
+        
     def next_day(self):
         self.oxygen = max(0, self.oxygen - 15)
         self.energy = max(0, self.energy - 20)
-
+        
         for module in self.modules:
             resource, amount = module.operate()
 
@@ -41,5 +60,8 @@ class Station:
                 self.oxygen  = min(100, self.oxygen + amount)
             elif resource == 'research':
                 self.research += amount
-            
+
+        if random.random() < 0.3:
+            self.trigger_random_event()
+        
         self.day += 1

@@ -45,6 +45,9 @@ class Engineer(CrewMember):
         self.energy = max(0, self.energy - 15)
 
     def repair_module(self, module):
+        if module.condition >= 100:
+            return False
+
         if self.is_alive and self.energy >= 15:
             module.repair(30)
             self.energy -= 15
@@ -58,8 +61,18 @@ class Medic(CrewMember):
         self.energy = max(0, self.energy - 8)
 
     def heal(self, member):
-        if self.is_alive and member.is_alive and self.energy >= 10:
-            member.health = min(100, member.health + 25)
+        if member.health >= 100:
+            return False
+
+        if (
+            self.is_alive
+            and member.is_alive
+            and self.energy >= 10
+        ):
+            member.health = min(
+                100,
+                member.health + 25
+            )
             self.energy -= 10
             return True
 

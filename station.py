@@ -23,6 +23,14 @@ class Station:
             return True
         return False
 
+    def show_status(self):
+        print(f"\n=== {self.name.upper()} STATUS ===")
+        print(f"Day: {self.day}")
+        print(f"Hull: {self.hull}%")
+        print(f"Energy: {self.energy}%")
+        print(f"Oxygen: {self.oxygen}%")
+        print(f"Research: {self.research}")
+
     def add_crew(self, member):
         self.crew.append(member)
 

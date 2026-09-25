@@ -37,6 +37,15 @@ class Engineer(CrewMember):
     def work(self):
         self.energy = max(0, self.energy - 15)
 
+    def repair_module(self, module):
+        if self.energy >= 15:
+            module.repair(30)
+            self.energy -= 15
+            return True
+
+        
+        return False
+
 
 class Medic(CrewMember):
     def work(self):

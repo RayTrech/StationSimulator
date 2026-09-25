@@ -1,24 +1,32 @@
+from crew import Engineer, Medic
 from station import Station
-from modules import Reactor, LifeSupport, Laboratory
 
 
 station = Station("Aurora")
 
-station.add_module(Reactor("Main Reactor"))
-station.add_module(LifeSupport("Life Support"))
-station.add_module(Laboratory("Research Lab"))
+engineer = Engineer("Ilya", 100, 100)
+medic = Medic("Anna", 100, 100)
 
-for _ in range(20):
-    station.next_day()
+station.add_crew(engineer)
+station.add_crew(medic)
 
-print("=== STATION STATUS ===")
+
+print("=== START ===")
+print(f"Destroyed: {station.is_destroyed}")
 print(f"Day: {station.day}")
-print(f"Energy: {station.energy}")
-print(f"Oxygen: {station.oxygen}")
+
+
+# Уничтожаем корпус
+station.hull = 0
+
+print("\n=== HULL DESTROYED ===")
 print(f"Hull: {station.hull}")
-print(f"Research: {station.research}")
+print(f"Destroyed: {station.is_destroyed}")
 
-print("\n=== EVENT LOG ===")
 
-for event in station.event_log:
-    print(event)
+# Пытаемся запустить следующий день
+result = station.next_day()
+
+print("\n=== TRY NEXT DAY ===")
+print(f"Next day result: {result}")
+print(f"Day: {station.day}")

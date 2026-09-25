@@ -26,8 +26,15 @@ class CrewMember:
         else:
             raise ValueError('Ошибка значения')
 
+    @property
+    def is_alive(self):
+        return self.health > 0
+
     def rest(self):
         self.energy = min(100, self.energy + 20)
+
+    def take_damage(self, amount):
+        self.health = max(0, self.health - amount)
 
     def __str__(self):
         return f'{self.__class__.__name__} {self.name} | Health: {self.health} | Energy: {self.energy}'
@@ -38,15 +45,23 @@ class Engineer(CrewMember):
         self.energy = max(0, self.energy - 15)
 
     def repair_module(self, module):
-        if self.energy >= 15:
+        if self.is_alive and self.energy >= 15:
             module.repair(30)
             self.energy -= 15
             return True
 
-        
         return False
 
 
 class Medic(CrewMember):
     def work(self):
-        self.energy = max(0, self.energy - 8) 
+        self.energy = max(0, self.energy - 8)
+
+    def heal(self, member):
+        if self.is_alive and member.is_alive and self.energy >= 10:
+            member.health = min(100, member.health + 25)
+            self.energy -= 10
+            return True
+
+        return False
+        

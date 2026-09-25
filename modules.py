@@ -2,6 +2,7 @@ class StationModule:
     def __init__(self, name):
         self.name = name
         self.condition = 100
+        self.requires_energy = True
 
     @property
     def condition(self):
@@ -28,6 +29,7 @@ class Reactor(StationModule):
     def __init__(self, name):
         super().__init__(name)
         self.power_output = 50
+        self.requires_energy = False
 
     def operate(self):
         if self.condition >= 70:

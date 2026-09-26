@@ -9,6 +9,7 @@ class Station:
         self.oxygen = 100
         self.energy = 100
         self.hull = 100
+        self.research_goal = 200
         self.crew = []
         self.modules = []
         self.event_log = []
@@ -23,13 +24,17 @@ class Station:
             return True
         return False
 
+    @property
+    def mission_completed(self):
+        return self.research >= self.research_goal
+
     def show_status(self):
         print(f"\n=== {self.name.upper()} STATUS ===")
         print(f"Day: {self.day}")
         print(f"Hull: {self.hull}%")
         print(f"Energy: {self.energy}%")
         print(f"Oxygen: {self.oxygen}%")
-        print(f"Research: {self.research}")
+        print(f"Research: {self.research}/{self.research_goal}")
 
     def add_crew(self, member):
         self.crew.append(member)
@@ -90,8 +95,14 @@ class Station:
 
         # 3. Затем работают модули, которым нужна энергия
         # Например LifeSupport и Laboratory
+        
         for module in self.modules:
-            if module.requires_energy and self.energy > 0:
+            if (
+                module.requires_energy
+                and self.energy >= module.energy_cost
+            ):
+                self.energy -= module.energy_cost
+                
                 resource, amount = module.operate()
                 self.apply_module_output(resource, amount)
 

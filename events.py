@@ -34,9 +34,9 @@ class ModuleFailureEvent(StationEvent):
         if not station.modules:
             return f'Module failure occurred, but there are no modules.'
         module = random.choice(station.modules)
-        module.damage(30)
+        module.damage(40)
 
-        return f'Module failure! {module.name} damaged by 30.'
+        return f'Module failure! {module.name} damaged by 40.'
 
 
         

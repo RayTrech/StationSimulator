@@ -2,6 +2,7 @@ class StationModule:
     def __init__(self, name):
         self.name = name
         self.condition = 100
+        self.energy_cost = 0
         self.requires_energy = True
 
     @property
@@ -43,6 +44,7 @@ class LifeSupport(StationModule):
     def __init__(self, name):
         super().__init__(name)
         self.oxygen_output = 20
+        self.energy_cost = 20
 
     def operate(self):
         if self.condition >= 70:
@@ -56,6 +58,7 @@ class Laboratory(StationModule):
     def __init__(self, name):
         super().__init__(name)
         self.research_output = 10
+        self.energy_cost = 15
 
     def operate(self):
         if self.condition >= 70:

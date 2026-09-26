@@ -55,6 +55,17 @@ class Engineer(CrewMember):
 
         return False
 
+    def repair_hull(self, station):
+        if station.hull >= 100:
+            return False
+        
+        if self.is_alive and self.energy >= 20:
+            station.hull = min(100, station.hull + 25)
+            self.energy -= 20
+            return True
+        
+        return False
+
 
 class Medic(CrewMember):
     def work(self):

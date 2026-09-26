@@ -75,6 +75,15 @@ def main():
                 print("\n=== CREW ===")
                 station.show_crew()
 
+                if station.mission_completed:
+                     print("\n==============================")
+                     print("       MISSION COMPLETE")
+                     print("==============================")
+                     print(f"Aurora survived {station.day} days.")
+                     print(f"Research collected: {station.research}")
+                     print("The scientific mission was successful!")
+                     break
+                
                 # Если станция была уничтожена именно в этот день
                 if station.is_destroyed:
                     print("\n=== GAME OVER ===")
@@ -223,6 +232,19 @@ def main():
             else:
                 print("\nInvalid crew member.")
 
+        elif choice == "9":
+            old_hull = station.hull
+            
+            success = engineer.repair_hull(station)
+            
+            if success:
+                print(f"\n{engineer.name} repaired the station hull.")
+                print(f"Hull: {old_hull}% -> {station.hull}%")
+                print(f"Engineer energy: {engineer.energy}")
+            else:
+                print("\nEngineer cannot repair the hull.")
+
+        
         elif choice == "0":
             print("\nSimulation terminated.")
             break

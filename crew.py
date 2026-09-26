@@ -37,8 +37,18 @@ class CrewMember:
         self.health = max(0, self.health - amount)
 
     def __str__(self):
-        return f'{self.__class__.__name__} {self.name} | Health: {self.health} | Energy: {self.energy}'
+        role = {"Engineer": "Инженер", "Medic": "Медик"}.get(
+            self.__class__.__name__, "Член экипажа"
+        )
+        return f'{role} {self.name} | Здоровье: {self.health} | Энергия: {self.energy}'
 
+    def to_dict(self):
+        return {
+            "type": self.__class__.__name__,
+            "name": self.name,
+            "health": self.health,
+            "energy": self.energy
+        }
 
 class Engineer(CrewMember):
     def work(self):

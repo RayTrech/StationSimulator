@@ -1,3 +1,3 @@
-# Station Simulator
+# Симулятор станции
 
-A Python project that simulates the operation of an orbital space station.
+Игра на Python о работе орбитальной космической станции.

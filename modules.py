@@ -23,7 +23,19 @@ class StationModule:
         self.condition = min(100, self.condition + amount)
 
     def __str__(self):
-        return f'{self.__class__.__name__} {self.name} | Condition: {self.condition}%'
+        module_type = {
+            "Reactor": "Реактор",
+            "LifeSupport": "Жизнеобеспечение",
+            "Laboratory": "Лаборатория",
+        }.get(self.__class__.__name__, "Модуль")
+        return f'{module_type} {self.name} | Состояние: {self.condition}%'
+
+    def to_dict(self):
+        return {
+            "type": self.__class__.__name__,
+            "name": self.name,
+            "condition": self.condition
+    }
 
 
 class Reactor(StationModule):

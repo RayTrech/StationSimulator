@@ -1,1 +1,5 @@
 save.json
+.save.json.*.tmp
+__pycache__/
+*.py[cod]
+.venv/

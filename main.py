@@ -28,6 +28,8 @@ def show_menu():
     print("10. Сохранить игру")
     print("11. Загрузить игру")
     print("12. Улучшение модуля")
+    print("13. Включить или выключить модуль")
+    print("14. Прогноз на следующий день")
     print("0. Выход")
 
 
@@ -134,6 +136,37 @@ def upgrade_module(station):
     print("Новая выработка за день: " + str(module.operate()[1]))
 
 
+def toggle_module(station):
+    print("\n=== ПИТАНИЕ МОДУЛЕЙ ===")
+    print("Отключённый модуль не расходует энергию и ничего не производит.")
+    module = select_item(station.modules, "\nВыберите модуль: ", "Такого модуля нет.")
+    if module is None:
+        return
+    try:
+        station.set_module_enabled(module, not module.enabled)
+    except ValueError as error:
+        print(error)
+        return
+    action = "включён" if module.enabled else "выключен"
+    print(f"Модуль «{module.name}» {action}.")
+    if not module.enabled and isinstance(module, (Reactor, LifeSupport)):
+        print("Внимание: отключена жизненно важная система. Проверьте прогноз дня.")
+
+
+def show_forecast(station):
+    print("\n=== ПРОГНОЗ НА СЛЕДУЮЩИЙ ДЕНЬ ===")
+    print("Без случайных событий; учитываются состояние и питание модулей.")
+    forecast = station.forecast_next_day()
+    forecast.show_status()
+    print("\n=== ПРОГНОЗ ЗДОРОВЬЯ ЭКИПАЖА ===")
+    forecast.show_crew()
+    if forecast.oxygen == 0 and not station.is_destroyed and not station.mission_completed:
+        print("Кислород закончится: живой экипаж потеряет 10 здоровья.")
+    if forecast.energy < station.energy:
+        print(f"Запас энергии снизится на {station.energy - forecast.energy}.")
+    show_game_result(forecast)
+
+
 def show_game_result(station):
     if station.is_destroyed:
         print("\n=== ИГРА ОКОНЧЕНА ===")
@@ -219,6 +252,10 @@ def main():
                 break
         elif choice == "12":
             upgrade_module(station)
+        elif choice == "13":
+            toggle_module(station)
+        elif choice == "14":
+            show_forecast(station)
         elif choice == "0":
             print("\nРабота симулятора завершена.")
             break

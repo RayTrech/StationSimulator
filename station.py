@@ -1,3 +1,4 @@
+from copy import deepcopy
 import random
 
 from crew import CrewMember, Engineer, Medic
@@ -70,6 +71,20 @@ class Station:
         for module in self.modules:
             print(module)
 
+    def set_module_enabled(self, module, enabled):
+        if module not in self.modules:
+            raise ValueError("Выбранный модуль не принадлежит этой станции.")
+        if self.is_destroyed or self.mission_completed:
+            raise ValueError("В завершённой партии нельзя менять питание модулей.")
+        if type(enabled) is not bool:
+            raise ValueError("Питание модуля должно быть включено или выключено.")
+        if module.enabled == enabled:
+            return False
+        module.enabled = enabled
+        action = "включён" if enabled else "выключен"
+        self.event_log.append(f"День {self.day}: модуль «{module.name}» {action}.")
+        return True
+
     def upgrade_module(self, module):
         if module not in self.modules:
             raise UpgradeError("Выбранный модуль не принадлежит этой станции.")
@@ -129,18 +144,32 @@ class Station:
         else:
             raise ValueError("Неизвестный ресурс модуля.")
 
-    def next_day(self):
-        if self.is_destroyed or self.mission_completed:
-            return False
+    def _start_day(self):
         self.day += 1
         self.oxygen = max(0, self.oxygen - self.daily_oxygen_cost)
         self.energy = max(0, self.energy - self.daily_energy_cost)
         self.operate_modules()
-        if random.random() < self.event_probability:
-            self.trigger_random_event()
+
+    def _apply_oxygen_damage(self):
         if self.oxygen == 0:
             for member in self.crew:
                 member.take_damage(10)
+
+    def forecast_next_day(self):
+        """Копия состояния на следующий день без случайных событий."""
+        forecast = deepcopy(self)
+        if not forecast.is_destroyed and not forecast.mission_completed:
+            forecast._start_day()
+            forecast._apply_oxygen_damage()
+        return forecast
+
+    def next_day(self):
+        if self.is_destroyed or self.mission_completed:
+            return False
+        self._start_day()
+        if random.random() < self.event_probability:
+            self.trigger_random_event()
+        self._apply_oxygen_damage()
         return True
 
     def to_dict(self):
@@ -205,5 +234,6 @@ class Station:
                     module = item_type(name)
                     module.condition = _read_integer(item, "condition", maximum=100)
                     module.level = item.get("level", 1)
+                    module.enabled = item.get("enabled", True)
                     station.add_module(module)
         return station

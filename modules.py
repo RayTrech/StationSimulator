@@ -12,8 +12,19 @@ class StationModule:
         self.name = name
         self.condition = 100
         self.level = 1
+        self.enabled = True
         self.energy_cost = 0
         self.requires_energy = True
+
+    @property
+    def enabled(self):
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value):
+        if type(value) is not bool:
+            raise ValueError("Питание модуля должно быть включено или выключено.")
+        self._enabled = value
 
     @property
     def level(self):
@@ -54,7 +65,7 @@ class StationModule:
 
     @property
     def is_operational(self):
-        return self.condition >= 30
+        return self.enabled and self.condition >= 30
 
     def damage(self, amount):
         if type(amount) is not int or amount < 0:
@@ -70,15 +81,16 @@ class StationModule:
         raise NotImplementedError("Модуль должен определять свою выработку.")
 
     def output_for_condition(self, maximum):
+        if not self.is_operational:
+            return 0
         if self.condition >= 70:
             return maximum
-        if self.is_operational:
-            return maximum // 2
-        return 0
+        return maximum // 2
 
     def __str__(self):
+        power = "включено" if self.enabled else "выключено"
         return (f"{self.module_type} «{self.name}» | Состояние: {self.condition}% | "
-                f"Уровень: {self.level}/{self.max_level}")
+                f"Уровень: {self.level}/{self.max_level} | Питание: {power}")
 
     def to_dict(self):
         return {
@@ -86,6 +98,7 @@ class StationModule:
             "name": self.name,
             "condition": self.condition,
             "level": self.level,
+            "enabled": self.enabled,
         }
 
 

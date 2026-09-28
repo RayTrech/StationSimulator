@@ -1,5 +1,5 @@
 from crew import Engineer, Medic
-from modules import Laboratory, LifeSupport, Reactor
+from modules import Laboratory, LifeSupport, Reactor, StationModule, UpgradeError
 from persistence import SaveGameError, load_game, save_game
 from station import Station
 
@@ -27,6 +27,7 @@ def show_menu():
     print("9. Ремонт корпуса")
     print("10. Сохранить игру")
     print("11. Загрузить игру")
+    print("12. Улучшение модуля")
     print("0. Выход")
 
 
@@ -114,6 +115,25 @@ def repair_hull(station):
         print("Ремонт невозможен: корпус исправен, разрушен или инженеру нужен отдых.")
 
 
+def upgrade_module(station):
+    print("\n=== УЛУЧШЕНИЕ МОДУЛЯ ===")
+    print(f"Доступно исследований: {station.research}")
+    costs = StationModule.upgrade_costs
+    print(f"Цена уровней 2 и 3: {costs[0]} и {costs[1]} исследований.")
+    print(f"Требуется {StationModule.upgrade_energy_cost} энергии инженера и состояние от 70%.")
+    module = select_item(station.modules, "\nВыберите модуль: ", "Такого модуля нет.")
+    if module is None:
+        return
+    try:
+        cost = station.upgrade_module(module)
+    except UpgradeError as error:
+        print(error)
+        return
+    print(f"Модуль «{module.name}» улучшен до уровня {module.level}.")
+    print(f"Потрачено исследований: {cost}; осталось: {station.research}.")
+    print("Новая выработка за день: " + str(module.operate()[1]))
+
+
 def show_game_result(station):
     if station.is_destroyed:
         print("\n=== ИГРА ОКОНЧЕНА ===")
@@ -197,6 +217,8 @@ def main():
             station.show_modules()
             if show_game_result(station):
                 break
+        elif choice == "12":
+            upgrade_module(station)
         elif choice == "0":
             print("\nРабота симулятора завершена.")
             break

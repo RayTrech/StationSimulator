@@ -2,7 +2,7 @@ import random
 
 from crew import CrewMember, Engineer, Medic
 from events import EVENT_TYPES
-from modules import Laboratory, LifeSupport, Reactor
+from modules import Laboratory, LifeSupport, Reactor, UpgradeError
 
 
 def _read_integer(data, key, minimum=0, maximum=None):
@@ -69,6 +69,33 @@ class Station:
     def show_modules(self):
         for module in self.modules:
             print(module)
+
+    def upgrade_module(self, module):
+        if module not in self.modules:
+            raise UpgradeError("Выбранный модуль не принадлежит этой станции.")
+        if self.is_destroyed or self.mission_completed:
+            raise UpgradeError("Завершённую партию нельзя продолжать улучшениями.")
+        cost = module.check_upgrade()
+        engineer = next(
+            (member for member in self.crew if isinstance(member, Engineer) and member.is_alive),
+            None,
+        )
+        if engineer is None:
+            raise UpgradeError("Для улучшения нужен живой инженер.")
+        if engineer.energy < module.upgrade_energy_cost:
+            raise UpgradeError("Инженеру нужно отдохнуть: требуется 20 энергии.")
+        if self.research < cost:
+            raise UpgradeError(f"Недостаточно исследований: требуется {cost}.")
+
+        # Все проверки выполняются до списания ресурсов и изменения уровня.
+        module.upgrade()
+        self.research -= cost
+        engineer.energy -= module.upgrade_energy_cost
+        self.event_log.append(
+            f"День {self.day}: модуль «{module.name}» улучшен до уровня {module.level}. "
+            f"Потрачено {cost} исследований."
+        )
+        return cost
 
     def operate_modules(self):
         # Реактор работает первым, жизнеобеспечение получает приоритет над наукой.
@@ -177,5 +204,6 @@ class Station:
                 else:
                     module = item_type(name)
                     module.condition = _read_integer(item, "condition", maximum=100)
+                    module.level = item.get("level", 1)
                     station.add_module(module)
         return station

@@ -155,7 +155,7 @@ class PowerManagementTests(unittest.TestCase):
         return output.getvalue()
 
     def test_menu_can_disable_forecast_enable_and_advance_day(self):
-        output = self.run_menu(["13", "3", "14", "13", "3", "4", "0"])
+        output = self.run_menu(["3", "4", "3", "0", "1", "2", "0", "3", "4", "3", "0", "4", "0"])
         self.assertIn("лаборатория» выключен", output)
         self.assertIn("Исследования: 0/200", output)
         self.assertIn("Без случайных событий", output)
@@ -164,7 +164,7 @@ class PowerManagementTests(unittest.TestCase):
 
     def test_menu_warns_about_suffocation_without_harming_crew(self):
         self.station.oxygen = 15
-        output = self.run_menu(["13", "2", "14", "0"])
+        output = self.run_menu(["3", "4", "2", "0", "1", "2", "0", "0"])
         self.assertIn("жизненно важная система", output)
         self.assertIn("экипаж потеряет 10 здоровья", output)
         self.assertEqual([member.health for member in self.station.crew], [100, 100])
@@ -174,5 +174,5 @@ class PowerManagementTests(unittest.TestCase):
         before = self.station.to_dict()
         for choice in ("текст", "0", "99"):
             with self.subTest(choice=choice):
-                self.run_menu(["13", choice, "14", "0"])
+                self.run_menu(["3", "4", choice, "0", "1", "2", "0", "0"])
                 self.assertEqual(self.station.to_dict(), before)

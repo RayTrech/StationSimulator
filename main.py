@@ -14,23 +14,38 @@ def create_station():
     return station
 
 
+def show_options(title, labels, exit_label="Назад"):
+    print(f"\n=== {title} ===")
+    for index, label in enumerate(labels, start=1):
+        print(f"{index}. {label}")
+    print(f"0. {exit_label}")
+
+
 def show_menu():
-    print("\n=== СТАНЦИЯ «АВРОРА» ===")
-    print("1. Состояние станции")
-    print("2. Экипаж")
-    print("3. Модули")
-    print("4. Следующий день")
-    print("5. Журнал событий")
-    print("6. Ремонт модуля")
-    print("7. Лечение члена экипажа")
-    print("8. Отдых члена экипажа")
-    print("9. Ремонт корпуса")
-    print("10. Сохранить игру")
-    print("11. Загрузить игру")
-    print("12. Улучшение модуля")
-    print("13. Включить или выключить модуль")
-    print("14. Прогноз на следующий день")
-    print("0. Выход")
+    show_options(
+        "СТАНЦИЯ «АВРОРА»",
+        ("Станция", "Экипаж", "Модули", "Следующий день", "Сохранения"),
+        exit_label="Выход",
+    )
+
+
+def run_submenu(station, title, actions):
+    """Действие может вернуть новую станцию после загрузки сохранения."""
+    options = {str(index): action for index, action in enumerate(actions, start=1)}
+    while True:
+        show_options(title, (label for label, _ in actions))
+        choice = input("\nВыберите действие: ").strip()
+        if choice == "0":
+            return station
+        if choice not in options:
+            print("\nНеизвестная команда.")
+            continue
+        _, action = options[choice]
+        updated_station = action(station)
+        if updated_station is not None:
+            station = updated_station
+        if station.is_destroyed or station.mission_completed:
+            return station
 
 
 def select_item(items, prompt, missing_message):
@@ -184,6 +199,38 @@ def show_game_result(station):
     return False
 
 
+def show_event_log(station):
+    print("\n=== ЖУРНАЛ СОБЫТИЙ ===")
+    if station.event_log:
+        for event in station.event_log:
+            print(event)
+    else:
+        print("Событий пока не было.")
+
+
+def save_station(station):
+    try:
+        save_game(station)
+        print("\nИгра успешно сохранена.")
+    except SaveGameError as error:
+        print(f"\n{error}")
+
+
+def load_station(station):
+    try:
+        restored = load_game()
+    except SaveGameError as error:
+        print(f"\n{error}")
+        return
+    print("\nИгра успешно загружена.")
+    restored.show_status()
+    print("\n=== ЭКИПАЖ ===")
+    restored.show_crew()
+    print("\n=== МОДУЛИ ===")
+    restored.show_modules()
+    return restored
+
+
 def main():
     station = create_station()
     print("================================")
@@ -196,13 +243,25 @@ def main():
         show_menu()
         choice = input("\nВыберите действие: ").strip()
         if choice == "1":
-            station.show_status()
+            station = run_submenu(station, "СТАНЦИЯ", (
+                ("Состояние и прогресс миссии", Station.show_status),
+                ("Прогноз на следующий день", show_forecast),
+                ("Журнал событий", show_event_log),
+                ("Ремонт корпуса", repair_hull),
+            ))
         elif choice == "2":
-            print("\n=== ЭКИПАЖ ===")
-            station.show_crew()
+            station = run_submenu(station, "ЭКИПАЖ", (
+                ("Список экипажа", Station.show_crew),
+                ("Лечение члена экипажа", heal_crew),
+                ("Отдых члена экипажа", rest_crew),
+            ))
         elif choice == "3":
-            print("\n=== МОДУЛИ ===")
-            station.show_modules()
+            station = run_submenu(station, "МОДУЛИ", (
+                ("Состояние модулей", Station.show_modules),
+                ("Ремонт модуля", repair_module),
+                ("Улучшение модуля", upgrade_module),
+                ("Включить или выключить модуль", toggle_module),
+            ))
         elif choice == "4":
             previous_event_count = len(station.event_log)
             station.next_day()
@@ -213,54 +272,18 @@ def main():
                 print(station.event_log[-1])
             print("\n=== ЭКИПАЖ ===")
             station.show_crew()
-            if show_game_result(station):
-                break
         elif choice == "5":
-            print("\n=== ЖУРНАЛ СОБЫТИЙ ===")
-            if station.event_log:
-                for event in station.event_log:
-                    print(event)
-            else:
-                print("Событий пока не было.")
-        elif choice == "6":
-            repair_module(station)
-        elif choice == "7":
-            heal_crew(station)
-        elif choice == "8":
-            rest_crew(station)
-        elif choice == "9":
-            repair_hull(station)
-        elif choice == "10":
-            try:
-                save_game(station)
-                print("\nИгра успешно сохранена.")
-            except SaveGameError as error:
-                print(f"\n{error}")
-        elif choice == "11":
-            try:
-                station = load_game()
-            except SaveGameError as error:
-                print(f"\n{error}")
-                continue
-            print("\nИгра успешно загружена.")
-            station.show_status()
-            print("\n=== ЭКИПАЖ ===")
-            station.show_crew()
-            print("\n=== МОДУЛИ ===")
-            station.show_modules()
-            if show_game_result(station):
-                break
-        elif choice == "12":
-            upgrade_module(station)
-        elif choice == "13":
-            toggle_module(station)
-        elif choice == "14":
-            show_forecast(station)
+            station = run_submenu(station, "СОХРАНЕНИЯ", (
+                ("Сохранить игру", save_station),
+                ("Загрузить игру", load_station),
+            ))
         elif choice == "0":
             print("\nРабота симулятора завершена.")
             break
         else:
             print("\nНеизвестная команда.")
+        if show_game_result(station):
+            break
 
 
 if __name__ == "__main__":

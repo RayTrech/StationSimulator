@@ -368,7 +368,7 @@ class ConsoleTests(unittest.TestCase):
         station = main.create_station()
         station.research = 40
         with patch("main.load_game", side_effect=SaveGameError("Файл сохранения повреждён.")):
-            output = self.run_main(station, ["11", "4", "0"])
+            output = self.run_main(station, ["5", "2", "0", "4", "0"])
         self.assertIn("повреждён", output)
         self.assertIn("Работа симулятора завершена", output)
         self.assertEqual(station.research, 48)
@@ -392,7 +392,13 @@ class ConsoleTests(unittest.TestCase):
             with patch("main.save_game", side_effect=lambda current: save_game(current, path)), patch(
                 "main.load_game", side_effect=read_save
             ):
-                output = self.run_main(station, ["6", "1", "7", "2", "8", "1", "9", "10", "4", "11", "5", "0"])
+                output = self.run_main(station, [
+                    "3", "2", "1", "0",  # Ремонт модуля.
+                    "2", "2", "2", "3", "1", "0",  # Лечение и отдых.
+                    "1", "4", "0",  # Ремонт корпуса.
+                    "5", "1", "0", "4",  # Сохранение и переход дня.
+                    "5", "2", "0", "1", "3", "0", "0",  # Загрузка и журнал.
+                ])
         self.assertEqual(restored[0].day, 1)
         self.assertEqual(restored[0].hull, 85)
         self.assertEqual(restored[0].modules[0].condition, 70)
@@ -407,7 +413,56 @@ class ConsoleTests(unittest.TestCase):
     def test_invalid_selection_does_not_crash(self):
         for choice in ("текст", "²", "0", "-1", "99", ""):
             with self.subTest(choice=choice):
-                self.run_main(main.create_station(), ["6", choice, "0"])
+                self.run_main(main.create_station(), ["3", "2", choice, "0", "0"])
+
+    def test_browsing_sections_and_returning_keeps_station_unchanged(self):
+        station = main.create_station()
+        before = station.to_dict()
+        output = self.run_main(station, [
+            "1", "1", "2", "3", "0",  # Состояние, прогноз, журнал.
+            "2", "1", "0", "3", "1", "0", "5", "0", "0",
+        ])
+        self.assertIn("0. Назад", output)
+        self.assertIn("Событий пока не было", output)
+        self.assertEqual(station.to_dict(), before)
+
+    def test_unknown_commands_in_each_section_allow_return_and_next_day(self):
+        station = main.create_station()
+        output = self.run_main(station, [
+            "99", "1", "99", "0", "2", "текст", "0",
+            "3", "-1", "0", "5", "ошибка", "0", "4", "0",
+        ])
+        self.assertEqual(output.count("Неизвестная команда"), 5)
+        self.assertEqual((station.day, station.research), (2, 8))
+
+    def test_failed_save_keeps_submenu_and_current_game_alive(self):
+        station = main.create_station()
+        with patch("main.save_game", side_effect=SaveGameError("Нет доступа к файлу.")):
+            output = self.run_main(station, ["5", "1", "0", "4", "0"])
+        self.assertIn("Нет доступа к файлу", output)
+        self.assertEqual((station.day, station.research), (2, 8))
+
+    def test_loaded_station_is_used_for_actions_in_current_and_other_sections(self):
+        station = main.create_station()
+        before = station.to_dict()
+        restored = main.create_station()
+        restored.day, restored.research = 7, 80
+        restored.modules[2].enabled = False
+        restored_before = restored.to_dict()
+        saved = []
+        with patch("main.load_game", return_value=restored), patch(
+            "main.save_game", side_effect=lambda current: saved.append(current.to_dict())
+        ):
+            self.run_main(station, [
+                "5", "2", "1", "0",  # Загрузить и сохранить в том же разделе.
+                "3", "4", "3", "0", "4",  # Включить лабораторию и перейти к новому дню.
+                "5", "1", "0", "0",
+            ])
+        self.assertEqual(saved[0], restored_before)
+        self.assertEqual(saved[1], restored.to_dict())
+        self.assertEqual((restored.day, restored.research), (8, 88))
+        self.assertTrue(restored.modules[2].enabled)
+        self.assertEqual(station.to_dict(), before)
 
     def test_victory_and_defeat_are_displayed(self):
         for reason in ("victory", "hull", "crew"):
@@ -432,7 +487,7 @@ class ConsoleTests(unittest.TestCase):
         station = main.create_station()
         station.research = 200
         with patch("main.load_game", return_value=station):
-            output = self.run_main(main.create_station(), ["11"])
+            output = self.run_main(main.create_station(), ["5", "2"])
         self.assertIn("МИССИЯ ВЫПОЛНЕНА", output)
 
 

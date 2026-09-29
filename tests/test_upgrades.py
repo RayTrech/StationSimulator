@@ -161,7 +161,7 @@ class UpgradeTests(unittest.TestCase):
         return output.getvalue()
 
     def test_menu_upgrade_then_next_day(self):
-        output = self.run_menu(["12", "3", "4", "0"])
+        output = self.run_menu(["3", "3", "3", "0", "4", "0"])
         self.assertEqual(self.module.level, 2)
         self.assertEqual(self.station.research, 92)
         self.assertIn("улучшен до уровня 2", output)
@@ -170,7 +170,7 @@ class UpgradeTests(unittest.TestCase):
     def test_menu_failure_does_not_stop_game(self):
         self.station.research = 0
         before = self.station.to_dict()
-        output = self.run_menu(["12", "3", "0"])
+        output = self.run_menu(["3", "3", "3", "0", "0"])
         self.assertIn("Недостаточно исследований", output)
         self.assertIn("Работа симулятора завершена", output)
         self.assertEqual(self.station.to_dict(), before)
